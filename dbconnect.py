@@ -29,6 +29,25 @@ def create_db_connection():
 test_connection = create_db_connection()
 print(test_connection)
 
+
+@app.get('/users/month_active/{month}')
+def get_active_users(month: int):
+    connection = create_db_connection()
+    cursor = connection.cursor()
+    try:
+       
+        result = cursor.fetchone()
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail='Failed to fetch active users from database.')
+    finally:
+        cursor.close()
+        connection.close()
+
+
+
+
+
 if __name__ == '__main__':
     uvicorn.run(app, host='0.0.0.0', port=8000)
 
