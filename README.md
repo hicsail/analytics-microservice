@@ -10,7 +10,7 @@ pip install -r requirements.txt
 
 ### Set environment variables
 
-- Create a .env file in the root directory and add the following variables:
+Create a .env file in the root directory and add the following variables:
 
 ```shell
 DB_CONNECTION_STRING=mysql+pymysql://username:password@hostname:port/database_name
