@@ -4,6 +4,11 @@ from sqlalchemy import create_engine, Column, Integer, String, DateTime
 from sqlalchemy.orm import sessionmaker, declarative_base
 from datetime import datetime, timedelta
 from typing import List
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+DB_CONNECTION_STRING = os.getenv('DB_CONNECTION_STRING', '')
 
 app = FastAPI()
 
@@ -41,7 +46,7 @@ class Screen(Base):
 # Function to establish a connection to the MySQL database
 def create_db_connection():
     try:
-        engine = create_engine('mysql+pymysql://root:cMgpBzyj3m2KX9OD35s2@containers-us-west-145.railway.app:5515/dev')
+        engine = create_engine(DB_CONNECTION_STRING)
         return engine
     except Exception as e:
         raise HTTPException(status_code=500, detail='Failed to connect to MySQL database.')
