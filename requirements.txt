@@ -1,5 +1,6 @@
 datetime
 fastapi
+httpx
 uvicorn[standard]
 SQLAlchemy
 pymysql
