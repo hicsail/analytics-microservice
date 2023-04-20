@@ -49,6 +49,7 @@ def create_db_connection():
         engine = create_engine(DB_CONNECTION_STRING)
         return engine
     except Exception as e:
+        print(f'Error: {e}')
         raise HTTPException(status_code=500, detail='Failed to connect to MySQL database.')
 
 engine = create_db_connection()
