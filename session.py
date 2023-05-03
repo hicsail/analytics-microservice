@@ -60,12 +60,7 @@ Session = sessionmaker(bind=db_connection)
 db_session = Session()
 
 '''
-Why use it:
-    To store a session into the database
-Parameters in JSON body:
-    userID (required): The user's ID that owns the session
-    sessionID (required): The session's user ID
-    startTime (required): The starting time of the session
+Use this endpoint to store a session into the database
 '''
 @app.post("/api/analysis/record-session-start-time/")
 async def record_session_start_time(item:RecordSessionItem):
@@ -97,12 +92,7 @@ async def record_session_start_time(item:RecordSessionItem):
 
 
 '''
-Why use this:
-    To update the end time of a session into the database
-JSON body:
-    userID: VARCHAR. The ID of the user that the session belongs to 
-    sessionID: VARCHAR. The ID of the updated session row
-    endTime: DATETIME. The end time of the session
+Use this endpoint to update the end time of a session into the database
 '''
 @app.post("/api/analysis/update-session-end-time/")
 async def update_session_end_time(item:EndTimeItem):
@@ -137,7 +127,9 @@ async def update_session_end_time(item:EndTimeItem):
         raise HTTPException(status_code=500, detail={"status_code": 500, "message": str(e)})
 
 
-
+"""
+Use it to check if the startTime and endTime conflict, i.e. endTime is earlier than startTime
+"""
 def endTime_conflicts_startTime(startTime, endTime):
     date_format = '%Y-%m-%d %H:%M:%S'
     if not isinstance(startTime, datetime):
@@ -146,41 +138,57 @@ def endTime_conflicts_startTime(startTime, endTime):
         endTime = datetime.strptime(endTime, date_format)
     return endTime <= startTime
 
-
+"""
+Use it to get a session from the database whose sessionID matches the parameter target_sessionID
+"""
 def get_session_row_in_session_table(target_sessionID):
     result = db_session.query(SessionTable).filter_by(sessionID=target_sessionID).first()
     return result
 
 
-def user_exists(targetValue):
+"""
+Use it to check if a user whose userID matches the targetUserID exists in the User table
+"""
+def user_exists(targetUserID):
     db_connection = create_db_connection()
     Session = sessionmaker(bind=db_connection)
     db_session = Session()
-    user_exists_result = db_session.query(UserTable).filter_by(userID=targetValue).first() is not None
+    user_exists_result = db_session.query(UserTable).filter_by(userID=targetUserID).first() is not None
     return user_exists_result
 
+
+"""
+Use it to check if there exists a session whose userID and sessionID match the targetUserID and targetSessionID
+"""
 def user_session_match(targetUserID, targetSessionID):
     result = db_session.query(SessionTable).filter(SessionTable.userID == targetUserID, SessionTable.sessionID == targetSessionID)
     return len(result.all())==1 
 
+"""
+Use it to check if the session row that has the targetSessionID has endTime column filled already.
+"""
 def endTimeExists(targetUserID, targetSessionID):
+    db_connection = create_db_connection()
+    Session = sessionmaker(bind=db_connection)
+    db_session = Session()
     result = db_session.query(SessionTable).filter(SessionTable.userID == targetUserID, SessionTable.sessionID == targetSessionID)
     for row in result:
         return row.endTime is not None
 
-
+"""
+Use it to update a session row's endTime in the database
+"""
 def updateSessionEndTime(item:EndTimeItem):
     row = db_session.query(SessionTable).filter_by(sessionID=item.sessionID).first()
     row.endTime = item.endTime
     db_session.commit()
 
-# def is_valid_datetime_format(datetime_str):
-#     try:
-#         datetime.strptime(datetime_str, '%Y-%m-%d %H:%M:%S')
-#         return True
-#     except ValueError:
-#         return False
 
+"""
+Use it to check if a datetime is valid.
+The definition of valid: the datetime_str is a UTC time in string format. It must meets the date_format defined
+in the function below, and it needs to be earlier than the current UTC time.
+"""
 def is_valid_datetime(datetime_str):
     try:
         date_format = '%Y-%m-%d %H:%M:%S'
@@ -189,7 +197,9 @@ def is_valid_datetime(datetime_str):
     except ValueError:
         return False
 
-
+"""
+Use it to delete a session row in the database whose session id matches the given sessionID
+"""
 def delete_session_from_database(sessionID):
     try:
         target_session = db_session.query(SessionTable).filter_by(sessionID=sessionID).first()
