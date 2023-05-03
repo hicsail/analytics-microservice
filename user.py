@@ -11,7 +11,14 @@ class InsertUserItem(BaseModel):
     userID: str
 
 
-app = FastAPI()
+app = FastAPI(
+    docs_url="/api/v2/docs",
+    redoc_url="/api/v2/redocs",
+    title="Core API",
+    description="Analytical Microservice",
+    version="1.0",
+    openapi_url="/api/v2/openapi.json",
+)
 
 
 db_connection = create_db_connection()
@@ -20,9 +27,9 @@ db_session = Session()
 
 
 return_response_400 = {
-    "missing_userID_field":{"status code":400, "message":"Missing field: userID"},
-    "userID_is_not_UUID":{"status code":400, "message":"Provided userID is not UUID"},
-    "user_exists_already":{"status code":400, "message":"User with the provided userID already exists"}
+    "missing_userID_field":"Missing field: userID",
+    "userID_is_not_UUID": "Provided userID is not UUID",
+    "user_exists_already": "User with the provided userID already exists"
 }
 
 
@@ -30,30 +37,37 @@ return_response_200 = {
     "added_user":{"status code":200, "message":"Added user successfully"}
 }
 
+user_error_response = {
+    200: {"description": "Added user successfully",
+          "content": {"application/json": {"example": {"status code": 200, "message":"Added user successfully"}}}},
+    411: {"status_code":411,"description": "missing userID"},
+    412: {"status_code":412,"description": "userID is not an UUID"},
+    413: {"status_code":413,"description": "User with the provided userID already exists"}
+}
 
 """
 Why use it:
     To insert a User with userID into the User database
 """
-@app.post("/api/analysis/add-user/")
+@app.post("/api/analysis/add-user/", responses=user_error_response)
 async def record_user(item:InsertUserItem):
     try:
         if item.userID is None or item.userID == "":
-            return JSONResponse(status_code=400,content=return_response_400["missing_userID_field"])
+            raise HTTPException(411, detail=user_error_response[411])
         if not is_valid_uuid(item.userID):
-            return JSONResponse(status_code=400, content=return_response_400["userID_is_not_UUID"])
+            raise HTTPException(412, detail=user_error_response[412])
         else:
             if user_exists(item.userID):
-                return JSONResponse(status_code=400, content=return_response_400["user_exists_already"])
-            new_user = UserTable(userID=item.userID)
-            db_session.add(new_user)
-            db_session.commit()
-            return JSONResponse(status_code=200, content=return_response_200["added_user"])
+                print("user exists already")
+                raise HTTPException(413, detail=user_error_response[413])
+            else:
+                new_user = UserTable(userID=item.userID)
+                db_session.add(new_user)
+                db_session.commit()
+                return JSONResponse(status_code=200, content=return_response_200["added_user"])
     except Exception as e:
-        print(e)
         db_session.rollback()
-        raise HTTPException(status_code=500, content={"status_code":500, "message":str(e)})
-
+        raise e
 
 def is_valid_uuid(uuid_string):
     try:

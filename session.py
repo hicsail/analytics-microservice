@@ -153,6 +153,9 @@ def get_session_row_in_session_table(target_sessionID):
 
 
 def user_exists(targetValue):
+    db_connection = create_db_connection()
+    Session = sessionmaker(bind=db_connection)
+    db_session = Session()
     user_exists_result = db_session.query(UserTable).filter_by(userID=targetValue).first() is not None
     return user_exists_result
 
