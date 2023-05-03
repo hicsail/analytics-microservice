@@ -17,8 +17,7 @@ Base = declarative_base()
 
 class User(Base):
     __tablename__ = 'user'
-    id = Column(Integer, primary_key=True)
-    userID = Column(String(40))
+    userID = Column(String(40), primary_key=True)
 
 class Event(Base):
     __tablename__ = 'event'
@@ -27,17 +26,17 @@ class Event(Base):
     occurTime = Column(DateTime)
     sessionID = Column(String(40))
 
-class SessionTable(Base):
+class Session(Base):
     __tablename__ = 'session'
     sessionID = Column(String(40), primary_key=True)
     userID = Column(String(40))
     startTime = Column(DateTime)
-    endTime = Column(DateTime)
+    endTime = Column(DateTime, nullable=True)
 
 class Screen(Base):
     __tablename__ = 'screen'
     screenID = Column(Integer, primary_key=True)
-    endTime = Column(DateTime)
+    endTime = Column(DateTime, nullable=True)
     startTime = Column(DateTime)
     screenName = Column(String(50))
     sessionID = Column(String(40))
@@ -57,7 +56,7 @@ engine = create_db_connection()
 Base.metadata.create_all(engine)
 
 Session = sessionmaker(bind=engine)
-session = Session()
+db_session = Session()
 # Insert a new user into the database
 # new_user = User(userID='1234567890abcdef')
 # session.add(new_user)
@@ -77,7 +76,7 @@ async def root():
 def get_daily_active_users(date: datetime) -> List[str]:
     #get users who have sessions with starttime on the given date
     try:
-        result = session.query(SessionTable.userID).filter(SessionTable.startTime == date).distinct().all()
+        result = db_session.query(Session.userID).filter(Session.startTime == date).distinct().all()
         return [row.userID for row in result]
     except Exception as e:
         raise HTTPException(status_code=500, detail='Failed to retrieve daily active users.')
@@ -86,7 +85,7 @@ def get_daily_active_users(date: datetime) -> List[str]:
 def get_weekly_new_users(date: datetime) -> List[str]:
     #get user who have sessions with starttime within the last 14 days
     try:
-        result = session.query(SessionTable.userID).filter(SessionTable.startTime >= date - timedelta(days=14)).distinct().all()
+        result = db_session.query(Session.userID).filter(Session.startTime >= date - timedelta(days=14)).distinct().all()
         return [row.userID for row in result]
     except Exception as e:
         raise HTTPException(status_code=500, detail='Failed to retrieve weekly new users.')
@@ -95,7 +94,7 @@ def get_weekly_new_users(date: datetime) -> List[str]:
 def get_monthly_active_users(date: datetime) -> List[str]:
     #get users who have sessions with starttime within the last 30 days
     try:
-        result = session.query(SessionTable.userID).filter(SessionTable.startTime >= date - timedelta(days=60)).distinct().all()
+        result = db_session.query(Session.userID).filter(Session.startTime >= date - timedelta(days=60)).distinct().all()
         return [row.userID for row in result]
     except Exception as e:
         raise HTTPException(status_code=500, detail='Failed to retrieve monthly active users.')
