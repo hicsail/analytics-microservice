@@ -42,11 +42,11 @@ user_response = {
     413: {"status_code":413,"description": "User with the provided userID already exists"}
 }
 
-"""
-Use it to insert a user with userID into the User database
-"""
 @app.post("/api/analysis/add-user/", responses=user_response)
 async def record_user(item:InsertUserItem):
+    """
+    Use it to insert a user with userID into the User database
+    """
     try:
         if item.userID is None or item.userID == "":
             raise HTTPException(411, detail=user_response[411])
@@ -65,20 +65,22 @@ async def record_user(item:InsertUserItem):
         db_session.rollback()
         raise e
 
-"""
-Use it to check if an id is a valid UUID
-"""
+
 def is_valid_uuid(uuid_string):
+    """
+    Use it to check if an id is a valid UUID
+    """
     try:
         uuid_obj = uuid.UUID(uuid_string)
     except ValueError:
         return False
     return str(uuid_obj) == uuid_string
 
-"""
-Use it to given a user's uuid, delete this user in the database
-"""
+
 def delete_user_from_database(user_uuid):
+    """
+    Use it to delete this user in the database whose userID matches the parameter user_uuid
+    """
     try:
         user = db_session.query(UserTable).filter_by(userID=user_uuid).first()
         db_session.delete(user)

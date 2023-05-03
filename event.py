@@ -31,12 +31,14 @@ return_response_200 = {
 
 app = FastAPI()
 
-"""
-Why use it:
-    To store an event into the database 
-"""
+
 @app.post("/api/analysis/record-event/")
 async def record_event(item:RecordEventItem):
+    """
+    Use it to store an event into the database
+    :param item: RecordEventItem. Hover and click it to see its data structure
+    :return: 200, 400, or 500 HTTPResponse
+    """
     try:
         if item.sessionID is None or item.sessionID == "":
             return JSONResponse(status_code=400,content=return_response_400["missing_sessionID"])
@@ -64,11 +66,13 @@ async def record_event(item:RecordEventItem):
         raise HTTPException(status_code=500, detail={"status_code":500, "message":str(e)})
 
 
-def getEngine():
-    return create_engine("mysql+pymysql://root:cMgpBzyj3m2KX9OD35s2@containers-us-west-145.railway.app:5515/dev")
-
 
 def userSessionExists(targetSessionID):
+    """
+    Use it to check if there is a session whose sessionID exists in the Session table
+    :param targetSessionID:
+    :return: True if there is a session whose sessionID exists in the Session table, otherwise return False.
+    """
     result = db_session.query(SessionTable).filter(SessionTable.sessionID==targetSessionID)
     return len(result.all())==1 
 

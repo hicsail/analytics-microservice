@@ -52,13 +52,14 @@ db_session = Session()
 app = FastAPI()
 
 
-"""
-Why use this:
-    To set the close time of the screen. When a user closes a screen, the app can call this API to record the time that
-    the user closes the screen
-"""
 @app.post("/api/analysis/update-current-screen-endTime/")
 async def close_current_screen(item:CloseScreenItem):
+    """
+    Use it to set the close time of the screen. When a user closes a screen, the app can call this API to record the time
+    that the user closes the screen
+    :param item: CloseScreenItem. Hover and click it to see its data structure
+    :return: 200, 400, or 500 HTTP Response
+    """
     try:
         if item.sessionID is None or item.sessionID == "":
             return JSONResponse(status_code=400,content=screen_return_response_400["missing_sessionID"])
@@ -92,22 +93,24 @@ async def close_current_screen(item:CloseScreenItem):
         db_session.rollback()
         raise HTTPException(status_code=500, detail={"status_code":500, "message":str(e)})
 
-"""
-Why use this:
-    To update the endTime of a screen whose screenID matches the one provided in the CloseScreenItem
-"""
+
 def updateScreenEndTime(item: CloseScreenItem):
+    """
+    Use it to update the endTime of a screen whose screenID matches the one provided in the CloseScreenItem
+    :param item: CloseScreenItem. Hover and click it to see its data structure
+    """
     row = db_session.query(ScreenTable).filter_by(screenID=item.screenID).first()
     row.endTime = item.endTime
     db_session.commit()
 
 
-"""
-Why use this:
-    Given a CloseScreenItem item, it checks if the given Item matches a row in the screen table. If there is anything
-    unmatched, it will return a message, so the function that calls this function will return 400 response
-"""
 def checkCloseScreenRow(item: CloseScreenItem):
+    """
+    Given a CloseScreenItem item, use this to checks if the given Item matches a row in the screen table. If there is
+    anything unmatched, it will return a message, so the function that calls this function will return 400 response
+    :param item: CloseScreenItem. Hover and click it to see its data structure
+    :return: string that represent the checking result
+    """
     result = db_session.query(ScreenTable).filter_by(screenID=item.screenID).first()
     if result is None:
         return "screenID not found"
@@ -120,13 +123,15 @@ def checkCloseScreenRow(item: CloseScreenItem):
     if result.endTime is not None:
         return "endTime is not null"
 
-"""
-Why use it:
-    To add a screen into the screen database. The screen has the information contained in the RecordScreenItem item.
-"""
-#TODO: Put the screenID into the response
+
 @app.post("/api/analysis/setCurrentScreen/")
 async def set_current_screen(item:RecordScreenItem):
+    """
+    Use it to add a screen into the screen database. The screen has the information contained in the RecordScreenItem
+    item.
+    :param item: The RecordScreenItem. Hover and click it to see its data structure
+    :return: 200, 400, or 500 HTTPResponse
+    """
     try:
         if item.sessionID is None or item.sessionID == "":
             return JSONResponse(status_code=400,content=screen_return_response_400["missing_sessionID"])
@@ -154,11 +159,12 @@ async def set_current_screen(item:RecordScreenItem):
         raise HTTPException(status_code=500, detail={"status_code":500, "message":str(e)})
 
 
-def getEngine():
-    return create_engine("mysql+pymysql://root:cMgpBzyj3m2KX9OD35s2@containers-us-west-145.railway.app:5515/dev")
-
-
 def userSessionExists(targetSessionID):
+    """
+    Use this function to check if a session that has the targetSessionID exists in the database
+    :param targetSessionID:
+    :return: True if there is session that has the targetSessionID, False if there is not.
+    """
     result = db_session.query(SessionTable).filter(SessionTable.sessionID==targetSessionID)
     return len(result.all())==1 
 
