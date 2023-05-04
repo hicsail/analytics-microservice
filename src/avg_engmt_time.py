@@ -1,15 +1,13 @@
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.responses import JSONResponse
 from datetime import datetime, timedelta
-from main import *
-from models import *
-from database import *
-
-app = FastAPI()
+from .main import *
+from .models import *
+from .database import *
 
 # Calculate the average engagement time for a given user for the selected time period
 @app.get("/averageEngagementTime/{user_id}/{time_period}", response_model=None)
-def get_average_engagement(user_id: str, time_period: str) -> JSONResponse:
+def get_average_engagement(user_id: str, time_period: int) -> JSONResponse:
     try:
         # Get the sessions for the user
         sessions = session.query(Session).filter_by(userID=user_id).all()
@@ -22,9 +20,9 @@ def get_average_engagement(user_id: str, time_period: str) -> JSONResponse:
 
         # Calculate the average engagement time in seconds
         if total_engagement_time > 0:
-            average_engagement_time = round(total_engagement_time / int(time_period))
-            return JSONResponse(content={"user_id": user_id, "average_engagement_time(sec)": average_engagement_time})
+            average_engagement_time = round(total_engagement_time / time_period)
+            return JSONResponse(content={"user_id": user_id, "time_period": time_period, "average_engagement_time(sec)": average_engagement_time})
         else:
-            return JSONResponse(content={"user_id": user_id, "average_engagement_time(sec)": 0})
+            return JSONResponse(content={"user_id": user_id, "time_period": time_period, "average_engagement_time(sec)": 0})
     except Exception as e:
         raise HTTPException(status_code=500, detail='Failed to retrieve average engagement time.')

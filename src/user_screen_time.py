@@ -2,13 +2,10 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime, timedelta
-from main import *
-from models import *
-from database import *
+from .main import *
+from .models import *
+from .database import *
 
-app = FastAPI()
-
-# Fetch total screen time for a given screen for a given user
 @app.get("/screenTime/{user_id}/{screen_id}", response_model=None)
 def get_user_screen_time(user_id: str, screen_id: int) -> JSONResponse:
     try:
